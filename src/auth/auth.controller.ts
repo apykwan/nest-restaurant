@@ -10,13 +10,13 @@ export class AuthController {
 
   // Register a new user
   @Post('signup')
-  signUp(@Body() signUpDto:SignUpDto) {
+  signUp(@Body() signUpDto:SignUpDto): Promise<{ token: string }> {
     return this.authService.signUp(signUpDto);
   }
 
   // Login user
   @Post('login')
-  login(@Body() loginDto:LoginDto) {
+  login(@Body() loginDto:LoginDto): Promise<{ token: string }> {
     return this.authService.login(loginDto);
   }
 }
