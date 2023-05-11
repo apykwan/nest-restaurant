@@ -4,6 +4,7 @@ import { Model, isValidObjectId }from 'mongoose';
 import { Query as ExpressQuery } from 'express-serve-static-core';
 
 import { Restaurant } from './schemas/restaurant.schema';
+import { User } from '../auth/schemas/user.schema';
 import APIFeatures from '../utils/apiFeatures.util';
 
 @Injectable()
@@ -33,8 +34,15 @@ export class RestaurantsService {
   }
 
   // Create new Restaurant  =>  POST  /restaurants
-  async create(restaurant: Restaurant): Promise<Restaurant> {
-    return await this.restaurantModel.create(restaurant);
+  async create(restaurant: Restaurant, user: User): Promise<Restaurant> {
+    const location = await APIFeatures.getRestaurantLocation(restaurant.address);
+
+    const data = Object.assign(restaurant, { 
+      location,
+      user: user._id
+    });
+
+    return await this.restaurantModel.create(data);
   }
 
   // Get a restaurant by id => GET / restaurants/:id
@@ -61,25 +69,24 @@ export class RestaurantsService {
 
   // Delete a restaurant by ID => DELETE /restaurants/:id
   async deleteById(id: string): Promise<Restaurant> {
-    const targetRestaurant = await this.findById(id);
-    if(!targetRestaurant) throw new NotFoundException('Restaurant not found');
+    await this.findById(id);
 
     return await this.restaurantModel.findByIdAndDelete(id);
   }
 
   // Upload Images => PUT /restaurants/upload/:id
-  async uploadImages(id, files) {
+  async uploadImages(id: string, files: object[]) {
     const images = await APIFeatures.uploadImage(files);
 
     return await this.restaurantModel.findByIdAndUpdate(id, {
-      images: images as Object[]
+      images: images as object[]
     }, {
       new: true,
       runValidators: true
     });
   }
 
-  async deleteImages(images) {
+  async deleteImages(images: object[]) {
     if(images.length === 0) return true;
     return await APIFeatures.deleteImage(images);
   }

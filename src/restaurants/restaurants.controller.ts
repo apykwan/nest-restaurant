@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   UseGuards,
+  ForbiddenException
 } from '@nestjs/common';
 import { Query as ExpressQuery } from 'express-serve-static-core';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -18,31 +19,29 @@ import { AuthGuard } from '@nestjs/passport';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { RestaurantsService } from './restaurants.service';
-import { Restaurant } from './schemas/restaurant.schema';
-import APIFeatures from '../utils/apiFeatures.util';
+import { Restaurant } from './schemas/restaurant.schema';;
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../auth/schemas/user.schema';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorators';
 
 @Controller('restaurants')
 export class RestaurantsController {
   constructor(private restaurantsService: RestaurantsService) {}
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
-  async getAllRestaurants(
-    @Query() query: ExpressQuery,
-    @CurrentUser() user: User
-  ): Promise<Restaurant[]> {
+  async getAllRestaurants(@Query() query: ExpressQuery): Promise<Restaurant[]> {
     return this.restaurantsService.findAll(query);
   }
 
   @Post()
-  async createRestaurant(@Body() restaurant: CreateRestaurantDto ): Promise<Restaurant> {
-    const location = await APIFeatures.getRestaurantLocation(restaurant.address); 
-    
-    const restaurantData = Object.assign(restaurant, { location });
-
-    return this.restaurantsService.create(restaurantData);
+  @UseGuards(AuthGuard('jwt'))
+  @Roles('admin', 'user')
+  async createRestaurant(
+    @Body() restaurant: CreateRestaurantDto, 
+    @CurrentUser() user: User
+  ): Promise<Restaurant> {
+    return this.restaurantsService.create(restaurant, user);
   }
 
   @Get(":id")
@@ -51,13 +50,23 @@ export class RestaurantsController {
   }
 
   @Put(':id')
-  async updateRestaurant(@Param('id') id: string, @Body() restaurant: UpdateRestaurantDto): Promise<Restaurant> {
+  @UseGuards(AuthGuard('jwt'))
+  async updateRestaurant(
+    @Param('id') id: string, 
+    @Body() restaurant: UpdateRestaurantDto,
+    @CurrentUser() user: User
+  ): Promise<Restaurant> {
+    const res = await this.restaurantsService.findById(id);
+    if(res.user.toString() !== user._id.toString()) throw new ForbiddenException('You are not the owner of this restaurant!!!');
+
     return this.restaurantsService.updateById(id, restaurant);
   }
 
   @Delete(":id")
-  async deleteRestaurant(@Param('id') id: string): Promise<{ deleted: Boolean }> {
+  @UseGuards(AuthGuard('jwt'))
+  async deleteRestaurant(@Param('id') id: string, @CurrentUser() user: User): Promise<{ deleted: Boolean }> {
     const restaurant = await this.restaurantsService.findById(id);
+    if(restaurant.user.toString() !== user._id.toString()) throw new ForbiddenException('You are not the owner of this restaurant!!!');
 
     const isDeleted = await this.restaurantsService.deleteImages(restaurant.images);
 
@@ -70,6 +79,7 @@ export class RestaurantsController {
   }
 
   @Put('upload/:id')
+  @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FilesInterceptor('files'))
   async uploadFiles(
     @Param('id') id: string,
