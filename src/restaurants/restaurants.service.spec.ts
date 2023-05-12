@@ -180,25 +180,25 @@ describe('RestaruantService', () => {
       const result = await service.uploadImages(mockRestaurant._id, files);
       expect(result).toEqual(updateRestaurant);
     });
+  });
+  
+  describe('deleteImages', () => {
+    it('should delete restaurant images from S3 bucket', async() => {
+      const mockImages = [
+        {
+          ETag: '"f130032ca8fc855c9687e8e14e8f10df"',
+          Location:
+            'https://restarurant-api-bucket.s3.amazonaws.com/restaurants/image1.jpeg',
+          key: 'restaurants/image1.jpeg',
+          Key: 'restaurants/image1.jpeg',
+          Bucket: 'restarurant-api-bucket',
+        },
+      ];
 
-    describe('deleteImages', () => {
-      it('should delete restaurant images from S3 bucket', async() => {
-        const mockImages = [
-          {
-            ETag: '"f130032ca8fc855c9687e8e14e8f10df"',
-            Location:
-              'https://restarurant-api-bucket.s3.amazonaws.com/restaurants/image1.jpeg',
-            key: 'restaurants/image1.jpeg',
-            Key: 'restaurants/image1.jpeg',
-            Bucket: 'restarurant-api-bucket',
-          },
-        ];
+      jest.spyOn(APIFeatures, 'deleteImage').mockResolvedValueOnce(true);
 
-        jest.spyOn(APIFeatures, 'deleteImage').mockResolvedValueOnce(true);
-
-        const result = await service.deleteImages(mockImages);
-        expect(result).toBe(true);
-      });
+      const result = await service.deleteImages(mockImages);
+      expect(result).toBe(true);
     });
-  })
+  });
 });

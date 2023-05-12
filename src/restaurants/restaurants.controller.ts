@@ -35,7 +35,7 @@ export class RestaurantsController {
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'user')
   async createRestaurant(
     @Body() restaurant: CreateRestaurantDto, 
