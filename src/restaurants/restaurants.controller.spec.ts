@@ -1,14 +1,11 @@
-import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { Model } from 'mongoose';
-import { getModelToken } from '@nestjs/mongoose';
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PassportModule } from '@nestjs/passport';
 
 import { RestaurantsController } from './restaurants.controller';
 import { RestaurantsService } from './restaurants.service';
-import { Restaurant, Category } from './schemas/restaurant.schema';
+import { Category } from './schemas/restaurant.schema';
 import { UserRoles, User } from '../auth/schemas/user.schema';
-import APIFeatures from '../utils/apiFeatures.util';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 

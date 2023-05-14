@@ -17,7 +17,7 @@ const mockUser = {
   role: UserRoles.USER
 };
 
-const mockRestaurant =   {
+const mockRestaurant = {
   _id: "644722c5c571c6145fbe9c28",
   name: "Google Retaurant 173",
   description: "This is just another description",
